@@ -45,7 +45,32 @@ void callback(char* topic, byte* payload, unsigned int length)
     publishDoor2();
 }
 
+bool isDST(int day, int month, int dow)
+{
+    // inputs are assumed to be 1 based for month & day.  DOW is ZERO based!
 
+    // jan, feb, and dec are out
+    if(month < 3 || month > 11)
+    {
+        return false;
+    }
+
+    // april - oct is DST
+    if(month > 3 && month < 11)
+    {
+        return true;
+    }
+
+    // in March, we are DST if our previous Sunday was on or after the 8th
+    int previousSunday = day - dow;
+    if(month == 3)
+    {
+        return previousSunday >= 8;
+    }
+
+    // for November, must be before Sunday to be DST ::  so previous Sunday must be before the 1st
+    return previousSunday <= 0;
+}
 
 void setup()
 {
@@ -56,7 +81,13 @@ void setup()
     pinMode(door1Pin, INPUT_PULLUP);
     pinMode(door2Pin, INPUT_PULLUP);
 
-    Time.zone(-4);
+    int offset = -5;
+    if(isDST(Time.day(), Time.month(), Time.weekday()-1))
+    {
+        offset = -4;
+    }
+
+     Time.zone(offset);
 
     connect();
 }
