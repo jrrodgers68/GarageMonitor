@@ -22,7 +22,7 @@ static const char* deviceTopic = "home1/garage/device/garagemonitor";
 int lastPublishTime = 0;
 
 void callback(char* topic, byte* payload, unsigned int length);
-MQTT client("pi3_2", 1883, callback);
+MQTT client("192.168.2.226", 1883, callback);
 
 // function prototypes
 void connect();
