@@ -20,6 +20,7 @@ static const char* door2Topic = "home1/garage/door/2";
 static const char* deviceTopic = "home1/garage/device/garagemonitor";
 
 int lastPublishTime = 0;
+int lastDSTCheckDay = 0;
 
 void callback(char* topic, byte* payload, unsigned int length);
 MQTT client("192.168.2.226", 1883, callback);
@@ -40,9 +41,20 @@ void callback(char* topic, byte* payload, unsigned int length)
     //memcpy(p, payload, length);
     //p[length] = NULL;
 
-    // fixme : re-publish door states
-    publishDoor1();
-    publishDoor2();
+    String reboot("reboot");
+
+    String t(topic);
+    if(reboot.equalsIgnoreCase(t))
+    {
+        System.reset();
+    }
+    else
+    {
+        // fixme : re-publish door states
+        publishDoor1();
+        publishDoor2();
+   
+    }    
 }
 
 bool isDST(int day, int month, int dow)
@@ -72,6 +84,22 @@ bool isDST(int day, int month, int dow)
     return previousSunday <= 0;
 }
 
+void handle_dst()
+{
+    int offset = -5;
+    Time.zone(offset);
+    if(isDST(Time.day(), Time.month(), Time.weekday()-1))
+    {
+        Time.beginDST();
+    }
+    else
+    {
+        Time.endDST();
+    }
+
+    lastDSTCheckDay = Time.day();
+}
+
 void setup()
 {
     // start display
@@ -80,14 +108,6 @@ void setup()
 
     pinMode(door1Pin, INPUT_PULLUP);
     pinMode(door2Pin, INPUT_PULLUP);
-
-    int offset = -5;
-    if(isDST(Time.day(), Time.month(), Time.weekday()-1))
-    {
-        offset = -4;
-    }
-
-     Time.zone(offset);
 
     connect();
 }
@@ -143,6 +163,11 @@ void connect()
     {
         Particle.connect();               //Connect to the Particle Cloud
         waitUntil(Particle.connected);    //Wait until connected to the Particle Cloud.
+    }
+
+    if(lastDSTCheckDay != Time.day())
+    {
+        handle_dst();
     }
 
     Particle.syncTime();
