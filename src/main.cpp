@@ -23,7 +23,7 @@ int lastPublishTime = 0;
 int lastDSTCheckDay = 0;
 
 void callback(char* topic, byte* payload, unsigned int length);
-MQTT client("192.168.2.226", 1883, callback);
+MQTT client("192.168.2.245", 1883, callback);
 
 // function prototypes
 void connect();
